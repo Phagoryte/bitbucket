@@ -17,19 +17,21 @@ pnpm add @coderabbitai/bitbucket
 
 ### Cloud
 
+For Bitbucket Cloud, use an Atlassian API token with your Atlassian account email for Basic authentication. App passwords are deprecated; API tokens are the recommended replacement.
+
 You can use the native `openapi-fetch` client or the `BitbucketCloudClient` class.
 
 ```ts
 import { createBitbucketCloudClient } from "@coderabbitai/bitbucket/cloud"
 import { toBase64 } from "@coderabbitai/bitbucket"
 import {
-	BITBUCKET_CLOUD_APP_PASSWORD,
+	BITBUCKET_CLOUD_API_TOKEN,
 	BITBUCKET_CLOUD_URL,
 	BITBUCKET_CLOUD_USERNAME,
 } from "./env.js"
 
 const basic = toBase64(
-	BITBUCKET_CLOUD_USERNAME + ":" + BITBUCKET_CLOUD_APP_PASSWORD,
+	BITBUCKET_CLOUD_USERNAME + ":" + BITBUCKET_CLOUD_API_TOKEN,
 )
 
 const client = createBitbucketCloudClient({
@@ -44,13 +46,13 @@ The `BitbucketCloudClient` wraps `openapi-fetch` requests by using the schema's 
 import { BitbucketCloudClient } from "@coderabbitai/bitbucket/cloud"
 import { toBase64 } from "@coderabbitai/bitbucket"
 import {
-	BITBUCKET_CLOUD_APP_PASSWORD,
+	BITBUCKET_CLOUD_API_TOKEN,
 	BITBUCKET_CLOUD_URL,
 	BITBUCKET_CLOUD_USERNAME,
 } from "./env.js"
 
 const basic = toBase64(
-	BITBUCKET_CLOUD_USERNAME + ":" + BITBUCKET_CLOUD_APP_PASSWORD,
+	BITBUCKET_CLOUD_USERNAME + ":" + BITBUCKET_CLOUD_API_TOKEN,
 )
 
 const client = new BitbucketCloudClient({

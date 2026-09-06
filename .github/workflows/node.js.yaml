@@ -16,27 +16,33 @@ jobs:
     if: ${{ github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: latest
-      - uses: actions/setup-node@v6
+          version: 10.12.4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: latest
+          node-version: 24
           cache: pnpm
 
       - name: Install Twingate
         run: |
-          echo "deb [trusted=yes] https://packages.twingate.com/apt/ /" | sudo tee /etc/apt/sources.list.d/twingate.list
-          sudo apt update -yq
-          sudo apt install -yq twingate
+          sudo apt-get update -yq
+          sudo apt-get install -yq ca-certificates curl gnupg
+          curl -fsSL https://packages.twingate.com/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/twingate-client-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/twingate-client-keyring.gpg] https://packages.twingate.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/twingate.list
+          sudo apt-get update -yq
+          sudo apt-get install -yq twingate
 
       - name: Setup and start Twingate
         env:
           TWINGATE_SERVICE_KEY: ${{ secrets.TWINGATE_SCM_TOOLS_SERVICE_KEY }}
         run: |
-          echo $TWINGATE_SERVICE_KEY | sudo twingate setup --headless=-
+          printf '%s\n' "$TWINGATE_SERVICE_KEY" | sudo twingate setup --headless=-
           sudo twingate start
 
       - name: Twingate status
@@ -50,7 +56,7 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         env:
           BITBUCKET_CLOUD_USERNAME: ${{ secrets.BITBUCKET_CLOUD_USERNAME }}
-          BITBUCKET_CLOUD_APP_PASSWORD: ${{ secrets.BITBUCKET_CLOUD_APP_PASSWORD }}
+          BITBUCKET_CLOUD_API_TOKEN: ${{ secrets.BITBUCKET_CLOUD_API_TOKEN }}
           BITBUCKET_SERVER_URL: ${{ secrets.BITBUCKET_SERVER_URL }}
           BITBUCKET_SERVER_TOKEN: ${{ secrets.BITBUCKET_SERVER_TOKEN }}
           BITBUCKET_SERVER_TEST_PROJECT_KEY: ${{ vars.BITBUCKET_SERVER_TEST_PROJECT_KEY }}
@@ -67,25 +73,25 @@ jobs:
     needs:
       - test
 
-    if: ${{ (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository) && (failure() && github.event_name != 'merge_group' && github.actor != 'github-actions[bot]' && github.actor != 'nektos/act') }}
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && failure() && github.actor != 'github-actions[bot]' && github.actor != 'nektos/act' }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.head_ref || github.ref }}
-      - uses: pnpm/action-setup@v6
+          ref: ${{ github.head_ref }}
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: latest
-      - uses: actions/setup-node@v6
+          version: 10.12.4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           cache: pnpm
-          node-version: latest
+          node-version: 24
 
       - run: |
           pnpm install --fix-lockfile --no-frozen-lockfile
           git add .
       - id: commit-lockfile
-        uses: qoomon/actions--create-commit@v1
+        uses: qoomon/actions--create-commit@7102b1a8b3cb8716dc70dbeb6d774c375d779d2f # v1
         with:
           message: |
             📌 pnpm install --fix-lockfile
@@ -97,7 +103,7 @@ jobs:
           pnpm run format
           git add .
       - id: commit-format
-        uses: qoomon/actions--create-commit@v1
+        uses: qoomon/actions--create-commit@7102b1a8b3cb8716dc70dbeb6d774c375d779d2f # v1
         with:
           message: |
             🎨 pnpm run format
@@ -109,7 +115,7 @@ jobs:
           pnpm run lint:fix
           git add .
       - id: commit-lint
-        uses: qoomon/actions--create-commit@v1
+        uses: qoomon/actions--create-commit@7102b1a8b3cb8716dc70dbeb6d774c375d779d2f # v1
         with:
           message: |
             🚨 pnpm run lint:fix
